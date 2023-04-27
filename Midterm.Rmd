@@ -1,0 +1,81 @@
+---
+title: "Midterm"
+author: "Emmy Niswonger"
+date: "`r Sys.Date()`"
+output: html_document
+---
+Midterm Assignment
+
+Use the material you have learned this class to build a dashboard studying the mathematics and/or reading proficiency scores for 2020-2021.  You have flexibility to specify the story in your dashboard. Be creative!!!
+
+Load the csv files for the math achievement and reading achievement scores
+```{r}
+library(dplyr)
+library(tidyverse)
+options(dplyr.summarise.inform = FALSE)
+
+rla_achievement <- read_csv("rla-achievement-lea-sy2020-21.csv")
+math_achievement <- read_csv("math-achievement-lea-sy2020-21 (1).csv")
+```
+
+##Reading Proficiency Scores
+
+Filter the reading scores data for all of the students in the school statewide with at least 1000 valid entries
+
+Now, mutate the PCTPROF into a numeric factor and find the mean percentage per state
+```{r}
+filtered_data_reading_scores <- rla_achievement %>% 
+  filter(CATEGORY == "ALL", GRADE == "00", NUMVALID >= 1000) %>%
+  group_by(State = STNAM,
+           County = LEANM) %>%
+  mutate(PCTPROF = as.numeric(PCTPROF, na.rm=TRUE)) %>%
+summarise(Percent_Reading_Proficiency = mean(PCTPROF, na.rm=TRUE))
+View(filtered_data_reading_scores)
+```
+
+Find the three highest mean reading proficiency percentages and the three lowest mean proficiency percentages 
+```{r}
+highest_percentages_reading <- filtered_data_reading_scores %>%
+  slice_max(Percent_Reading_Proficiency, n=3)
+
+lowest_percentages_reading <- filtered_data_reading_scores %>%
+  slice_min(Percent_Reading_Proficiency, n=3)
+```
+
+Now, merge the mean highest and lowest reading proficiency percentages into a dataframe 
+```{r}
+average_proficiency_reading <- rbind(highest_percentages_reading, lowest_percentages_reading)
+```
+
+##Math Proficiency Scores
+
+Filter the math scores data for all of the students in the school statewide with at least 1000 valid entries
+```{r}
+filtered_data_math_scores <- math_achievement %>% 
+  filter(CATEGORY == "ALL", GRADE == "00", NUMVALID >= 1000) %>%
+  group_by(State = STNAM,
+           County = LEANM) %>%
+  mutate(PCTPROF = as.numeric(PCTPROF)) %>%
+summarise(Percent_Math_Proficiency = mean(PCTPROF, na.rm = TRUE))
+View(filtered_data_math_scores)
+```
+
+Find the three highest mean math proficiency percentages and the three lowest mean proficiency percentages 
+```{r}
+highest_percentages_math <- filtered_data_math_scores %>%
+  slice_max(Percent_Math_Proficiency, n=3)
+
+lowest_percentages_math <- filtered_data_math_scores %>%
+  slice_min(Percent_Math_Proficiency, n=3)
+```
+
+Now, merge the mean highest and lowest reading proficiency percentages into a dataframe 
+```{r}
+average_proficiency_math <- rbind(highest_percentages_math, lowest_percentages_math)
+```
+
+## Output for both reading and math average proficiency scores 
+
+```{r}
+average_scores <- cbind(average_proficiency_math, average_proficiency_reading)
+```
